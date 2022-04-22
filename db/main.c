@@ -3,13 +3,46 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef unsigned long long ssize_t;
+
+
+size_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+    char* buf = *lineptr;
+    size_t c,i = 0;
+    if(buf == NULL || *n == 0)
+    {
+        *lineptr = malloc(10);
+        buf = *lineptr;
+        *n = 10;
+    }
+    while((c = fgetc(stream)) != '\n')
+    {
+        if(c == EOF)
+        {
+            return - 1;
+        }
+        if(i < *n - 2) //留给'\n'和'\0'
+        {
+            *(buf + i) = c;
+            i++;
+        }
+        else
+        {
+            *n = *n + 10;
+            buf = realloc(buf, *n);
+            *(buf + i++) = c;
+        }
+    }
+    *(buf + i++) = '\n';
+    *(buf + i) = '\0';
+    return i;
+}
 
 typedef struct 
 {
     char* buffer;
     size_t buffer_length;
-    ssize_t input_length;
+    size_t input_length;
 } InputBuffer;
 
 InputBuffer* new_input_buffer() 
@@ -29,7 +62,7 @@ void print_prompt()
 
 void read_input(InputBuffer* input_buffer)
 {
-    ssize_t bytes_read = getline(&(input_buffer->buffer),&(input_buffer->buffer_length));
+    size_t bytes_read = getline(&(input_buffer->buffer),&(input_buffer->buffer_length),stdin);
     if(bytes_read <= 0)
     {
         printf("Error reading input\n");
@@ -44,6 +77,7 @@ void close_input_buffer(InputBuffer* input_buffer)
     free(input_buffer->buffer);
     free(input_buffer);
 }
+
 
 int main(int argc, char* argv[])
 {
